@@ -210,7 +210,7 @@ update export updater msg { model } =
                 , Cmd.batch
                     [ Cmd.map RunMsg cmd
                     , toDevTools <|
-                        encodeAction export { model = model, message = Just imsg }
+                        encodeAction export { model = updated, message = Just imsg }
                     ]
                 )
 
