@@ -1,0 +1,63 @@
+<html>
+<head>
+  <script src="elm.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/javascript">
+    const app = Elm.Main.init({ node: document.getElementById('app') });
+
+    if (window.__REDUX_DEVTOOLS_EXTENSION__) {
+      const devtools = window.__REDUX_DEVTOOLS_EXTENSION__.connect({
+        features: {
+          pause: false,     // start/ pause recording of dispatched actions
+          lock: false,      // lock/ unlock dispatching actions and side effects
+          persist: true,    // persist states on page reloading
+          export: true,     // export history of actions in a file
+          import: 'custom', // import history of actions from a file
+          remote: false,
+          jump: true,       // jump back and forth (time travelling)
+          skip: false,       // skip (cancel) actions
+          reorder: false,   // drag and drop actions in the history list
+          dispatch: false,  // dispatch custom actions or action creators
+          test: false       // generate tests for the selected actions,
+        },
+      });
+
+      // Send elm messages to devtools
+      app.ports.toDevTools.subscribe(({message, model}) => {
+        devtools.send(message, model);
+      });
+
+      // Respond to messages from devtools
+      devtools.subscribe((msg) => {
+        let next, state;
+
+        switch (msg.type) {
+          case "START":
+            devtools.init();
+            break;
+
+          case "DISPATCH":
+            switch (msg.payload.type) {
+              case "IMPORT_STATE":
+                next  = msg.payload.nextLiftedState;
+                state = next.computedStates[next.currentStateIndex].state;
+
+                devtools.send(null, next);
+                app.ports.fromDevTools.send(state);
+                break;
+
+              case "JUMP_TO_ACTION":
+                state = JSON.parse(msg.state);
+                app.ports.fromDevTools.send(state);
+                break;
+            }
+            break;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
